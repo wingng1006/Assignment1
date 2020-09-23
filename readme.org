@@ -53,7 +53,8 @@ https://www.kaggle.com/t/80fd56e6c45d460dbeea07d021e820b3
 - Each day, you can submit *5* predictions on Kaggle to evaluate how well your algorithm performs.
 - Click "Submit Predictions" button and you will be directed to a page to upload your output.
 - Drag and drop the file containing predicted outcomes to Kaggle (as described in the previous section). 
-- Kaggle will calculate $F1$ score for you. What's cool about Kaggle is that you can readily see how you are performing compared with your classmates, from the *leaderboard* panel. When submitting, use your student ID as the name for you.
+- Kaggle will calculate F1 score for you. What's cool about Kaggle is that you can readily see how you are performing compared with your classmates, from the *leaderboard* panel. 
+- When submitting, use your student ID as the name for you.
 
 **** Grading policy
 :PROPERTIES:
