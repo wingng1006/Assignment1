@@ -38,9 +38,10 @@ probability is bigger than a threshold *ϕ*. Below I set *ϕ* = 0.5
     ##     0 
     ## 71739
 
-As you can see, every data point’s predicted category is “- 50000.”.
-That’s a trivial solution by predicting every data point belongs to the
-same majority class.
+As you can see, every data point’s predicted category is “0”. That’s a
+*trivial* solution by predicting every data point belongs to the same
+majority class. Your prediction should be better than my simplest
+prediction.
 
 output
 ------
