@@ -37,7 +37,7 @@ We mentioned several algorithms in the classroom (linear/logistic regression, LA
 :CUSTOM_ID: h:3F01A0E6-F918-4759-BA52-C1B3363AACD9
 :END:
 
-- For your reference, on GiHub, I uploaded =test_code.md= which should help you go over the process of using logistic regresstion to make a simplest possible prediction model.
+- For your reference, on GiHub, I uploaded =example_r_code.md= which should help you go over the process of using logistic regresstion to make a simplest possible prediction model.
 - For more on decision trees, [[https://www.datacamp.com/community/tutorials/decision-trees-R][this link]] provides a great step-by-step guide.
 - For LASSO/Ridge/Elastic Net, check [[https://web.stanford.edu/~hastie/glmnet/glmnet_alpha.html][the inventor's own webpage]]
 
