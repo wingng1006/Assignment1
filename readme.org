@@ -101,7 +101,10 @@ On Kaggle or GitHub, use the two files for training and testing.
 
 - =census-income-training.csv= : this data contains all of the training data for your model.
 - =census-income-test.csv= : this data contains the test data for your model. It has 71740 rows, with the first row as the header. You will feed this data into your model to make predictions. The outcome, =income_morethan_50K=, is removed from the test set!
-  
+ 
+The file =census-income-column-names.txt= contains detailed descriptions of variables listed in the data frame.
+
+ 
 For your reference, your output should be formatted as the below, with 71740 rows in exact. The first row is header. Then each row should contains Id and *predicted* outcome (1 if predicted outcome > 50K and 0 otherwise). I have uploaded an =example_submission.csv= for your reference.
 
 #+BEGIN_QUOTE
