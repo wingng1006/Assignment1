@@ -10,7 +10,7 @@ CLOCK: [2020-09-23 Wed 21:20]
 CLOCK: [2020-09-22 Tue 14:00]--[2020-09-22 Tue 17:00] =>  3:00
 :END:
 
-**Description
+** Description
 :PROPERTIES:
 :CUSTOM_ID: h:80b16449-aa44-43af-82f7-0f668310618a
 :END:
