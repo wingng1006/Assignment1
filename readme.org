@@ -1,4 +1,4 @@
-** Assignment 1
+* Assignment 1
 :PROPERTIES:
 :CUSTOM_ID: h:f3b78dd9-100d-4b13-b2c0-3a7e616d44f3
 :EXPORT_TITLE: SOSC 4300/5500: Assignment 1
@@ -10,7 +10,7 @@ CLOCK: [2020-09-23 Wed 21:20]
 CLOCK: [2020-09-22 Tue 14:00]--[2020-09-22 Tue 17:00] =>  3:00
 :END:
 
-*** Description
+**Description
 :PROPERTIES:
 :CUSTOM_ID: h:80b16449-aa44-43af-82f7-0f668310618a
 :END:
@@ -26,7 +26,7 @@ There is *no unique* solution to this task. You are free to explore:
 - Different models (linear/logistic regressions, LASSO, Ridge, Tree and Random Forests, or whatever models you want to try).
 - Different set of predictors. Read the dataset description or use a data-driven way to find predictors that can improve out-of-sample prediction tasks.
 
-*** Algorithms 
+** Algorithms 
 We mentioned several algorithms in the classroom (linear/logistic regression, LASSO/Ridge/Elastic Net, Decisios Tree/Random Forests, SVM). Below are some resources you can start with.
 
 **** R users
@@ -45,7 +45,7 @@ Specifically, read their official websites for how you can run
 - [[https://scikit-learn.org/stable/modules/ensemble.html][Bagging trees and random forests]]
 - [[https://scikit-learn.org/stable/modules/svm.html][SVM]]
   
-*** Submit your work
+** Submit your work
 :PROPERTIES:
 :CUSTOM_ID: h:0822d674-713f-4947-8b9b-ee223f73dd1d
 :END:
@@ -62,7 +62,7 @@ Our assignment can be found here. You need to register a Kaggle account if you d
 https://www.kaggle.com/t/80fd56e6c45d460dbeea07d021e820b3
 
 
-**** How to Submit on Kaggle
+*** How to Submit on Kaggle
 :PROPERTIES:
 :CUSTOM_ID: h:125c6185-1245-4807-9951-cfc33ab09d15
 :END:
@@ -84,7 +84,7 @@ If you can make a successful submission on Kaggle (regardless of the performance
 2. The best performance you achieved. Here you are competing with your classmates on best performances.
 
    
-*** Files 
+** Files 
 :PROPERTIES:
 :CUSTOM_ID: h:6674d9be-d044-4869-b772-90751fffda98
 :END:
