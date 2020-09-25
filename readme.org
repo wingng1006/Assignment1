@@ -21,11 +21,29 @@ Welcome to the first assignment! This assignment uses US census data in 1994. Th
 
 
 This assignment gives you an hands-on experience of using statistical models for prediction.
-There is no unique solution to this task. You are free to explore:
+There is *no unique* solution to this task. You are free to explore:
 
 - Different models (linear/logistic regressions, LASSO, Ridge, Tree and Random Forests, or whatever models you want to try).
 - Different set of predictors. Read the dataset description or use a data-driven way to find predictors that can improve out-of-sample prediction tasks.
 
+*** Algorithms 
+We mentioned several algorithms in the classroom (linear/logistic regression, LASSO/Ridge/Elastic Net, Decisios Tree/Random Forests, SVM). Below are some resources you can start with.
+
+**** R users
+
+- For your reference, on GiHub, I uploaded =test_code.rmd= which should help you go over the process of using logistic regresstion to make a simplest possible prediction model.
+- For more on decision trees, [[https://www.datacamp.com/community/tutorials/decision-trees-R][this link]] provides a great step-by-step guide.
+- For LASSO/Ridge/Elastic Net, check [[https://web.stanford.edu/~hastie/glmnet/glmnet_alpha.html][the inventor's own webpage]]
+
+**** Python users
+
+For Python users, [[https://scikit-learn.org/stable/install.html][scikit-learn]] is a great package that allow you to run many machine learning algorithms. 
+Specifically, read their official websites for how you can run
+
+- [[https://scikit-learn.org/stable/modules/linear_model.html][linear/logistic regression, LASSO, RIdge and ElasticNet]]
+- [[https://scikit-learn.org/stable/modules/tree.html][Decision Tree]]
+- [[https://scikit-learn.org/stable/modules/ensemble.html][Bagging trees and random forests]]
+- [[https://scikit-learn.org/stable/modules/svm.html][SVM]]
   
 *** Submit your work
 :PROPERTIES:
