@@ -1,6 +1,6 @@
 ---
 title: "Assignment 1 Example Code"
-output: html_document
+output: rmarkdown::github_document
 ---
 We first read in train and test data
 

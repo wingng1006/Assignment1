@@ -27,15 +27,24 @@ There is *no unique* solution to this task. You are free to explore:
 - Different set of predictors. Read the dataset description or use a data-driven way to find predictors that can improve out-of-sample prediction tasks.
 
 ** Algorithms 
+:PROPERTIES:
+:CUSTOM_ID: h:8D2C26B7-CD9F-4B72-B33E-5FBC1FD0F1B1
+:END:
 We mentioned several algorithms in the classroom (linear/logistic regression, LASSO/Ridge/Elastic Net, Decisios Tree/Random Forests, SVM). Below are some resources you can start with.
 
 **** R users
+:PROPERTIES:
+:CUSTOM_ID: h:3F01A0E6-F918-4759-BA52-C1B3363AACD9
+:END:
 
-- For your reference, on GiHub, I uploaded =test_code.rmd= which should help you go over the process of using logistic regresstion to make a simplest possible prediction model.
+- For your reference, on GiHub, I uploaded =test_code.md= which should help you go over the process of using logistic regresstion to make a simplest possible prediction model.
 - For more on decision trees, [[https://www.datacamp.com/community/tutorials/decision-trees-R][this link]] provides a great step-by-step guide.
 - For LASSO/Ridge/Elastic Net, check [[https://web.stanford.edu/~hastie/glmnet/glmnet_alpha.html][the inventor's own webpage]]
 
 **** Python users
+:PROPERTIES:
+:CUSTOM_ID: h:63ACC6C3-F29B-462E-A8C2-DC77E07683D7
+:END:
 
 For Python users, [[https://scikit-learn.org/stable/install.html][scikit-learn]] is a great package that allow you to run many machine learning algorithms. 
 Specifically, read their official websites for how you can run
