@@ -68,8 +68,7 @@ Next, we will use Kaggle to evaluate your prediction performance.[[https://www.k
 
 Our assignment can be found here. You need to register a Kaggle account if you do not have one yet.
 
-https://www.kaggle.com/t/80fd56e6c45d460dbeea07d021e820b3
-
+https://www.kaggle.com/c/2022-hkust-4300-5500/overview
 
 *** How to Submit on Kaggle
 :PROPERTIES:
@@ -87,10 +86,12 @@ https://www.kaggle.com/t/80fd56e6c45d460dbeea07d021e820b3
 :PROPERTIES:
 :CUSTOM_ID: h:c45d1d79-0d5f-4aee-9f4a-a026bfe9bfae
 :END:
-If you can make a successful submission on Kaggle (regardless of the performance), you will automatically get 60% of the scores. The rest 40% will be calculated based on:
+If you can make a successful submission on Kaggle (regardless of the performance), you will automatically get 30% of the scores. The rest 70% will be calculated based on:
 
-1. Code notebook (Python notebook or R markdown file) on GitHub (20%):  with clear documentation of methods used and attempts you have tried to improve your prediction performances.
-2. The best performance you achieved. Here you are competing with your classmates on best performances.
+1. (40%) Code notebook (Python notebook or R markdown file) on GitHub (20%):  with clear documentation of methods used and attempts you have tried to improve your prediction performances. We will evaluate based on:
+  - how many models you have tried
+  - properly tuned model parameters (i.e., not use the default setting but try to find the best tuning parameter)
+2. (30%) The best performance you achieved. Here you are competing with your classmates on who can achieve the best performance.
 
    
 ** Files 
