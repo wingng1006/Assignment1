@@ -88,9 +88,10 @@ https://www.kaggle.com/c/2022-hkust-4300-5500/overview
 :END:
 If you can make a successful submission on Kaggle (regardless of the performance), you will automatically get 30% of the scores. The rest 70% will be calculated based on:
 
-1. (40%) Code notebook (Python notebook or R markdown file) on GitHub (20%):  with clear documentation of methods used and attempts you have tried to improve your prediction performances. We will evaluate based on:
+1. (40%) Code notebook (Python notebook or R markdown file) on GitHub:  with clear documentation of methods used and attempts you have tried to improve your prediction performances. We will evaluate based on:
   - how many models you have tried
   - properly tuned model parameters (i.e., not use the default setting but try to find the best tuning parameter)
+  - discussions on the strategies you used to improve your model prediction
 2. (30%) The best performance you achieved. Here you are competing with your classmates on who can achieve the best performance.
 
    
