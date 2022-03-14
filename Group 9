@@ -1,0 +1,646 @@
+---
+title: "Assignment 1 Data Prep Code"
+output:
+  word_document: default
+  html_document: default
+---
+#Data Preparation 
+
+##Prepare the working environment. 
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+###- Set working directory and Clear Environment
+```{r} 
+wd = "/Users/User/Desktop/SOSC4300 ASM1"
+setwd(wd)
+rm(list = ls())
+
+```
+
+
+***
+##Libraries & Parameters
+We load the necessary libraries and set some parameters
+"caret" is package for Classification and Regression Training
+"mlr" is package for machine learning
+"fastDummies" is package for changing the categorical variables to dummy variables
+
+```{r}
+library(data.table)
+library(hardhat) 
+library(caret) 
+library(mlr) #package for machine learning
+library(fastDummies)
+
+
+set.seed(123) #make reproducible                          
+test.split <- 0.7
+```
+
+
+***
+##1. Import data and Replace the value "," ","?","NA" to NA
+
+###- Download data
+
+```{r}
+data <- fread("census-income-training.csv", na.strings = c(""," ","?","NA",NA))
+data.kaggle <- fread("census-income-test.csv", na.strings = c(""," ","?","NA",NA))
+
+```
+
+
+***
+##2. Clean data 
+
+###2.1 Treat Categorical and numerical different 
+We split the data into categorical and numerical columns and treat them differently. The categorical columns are first tested for potential issues (NAs, different amounts of levels). It can be more convenient for the data manipulation.
+
+####- Set column classes
+```{r}
+factor_columns <- names(data)[c(2:5,7,8:16,20:29,31:38,40,41)]
+numeric_columns <- setdiff(names(data)[1:40],factor_columns)
+
+factor_columns.kaggle <- names(data.kaggle)[c(2:5,7,8:16,20:29,31:38,40)]
+numeric_columns.kaggle <- setdiff(names(data.kaggle)[1:40],factor_columns)
+```
+
+####- Apply column classes
+```{r}
+data <- data.frame(data)
+data.kaggle <- data.frame(data.kaggle)
+
+data[factor_columns] <- lapply(data[factor_columns],  factor)
+data[numeric_columns] <- lapply(data[numeric_columns],  as.numeric)
+
+kaggle.ids <-data.kaggle$Id
+data.kaggle$Id <- NULL
+
+data.kaggle[factor_columns.kaggle] <- lapply(data.kaggle[factor_columns.kaggle], factor)
+data.kaggle[numeric_columns.kaggle] <- lapply(data.kaggle[numeric_columns.kaggle], as.numeric)
+```
+
+####- Subset categorical variables
+```{r}
+data_categorical <- subset(data, select = factor_columns)
+data.kaggle_categorical <- subset(data.kaggle, select = factor_columns.kaggle)
+
+```
+
+####- Subset numerical variables
+```{r}
+data_numerical <- subset(data, select = numeric_columns)
+data.kaggle_numerical <- subset(data.kaggle, select = numeric_columns.kaggle)
+```
+
+###2.2 Treat Categorical variables
+
+####- Check missing values per columns
+We check the data for missing values to avoid issues with this. 
+```{r}
+missing_values <- apply(data_categorical, 2, function(x) sum(is.na(x)))
+missing_values.kaggle <- apply(data.kaggle_categorical, 2, function(x) sum(is.na(x)))
+any(missing_values > 0)#no missing values
+any(missing_values.kaggle > 0) #no missing values
+```
+
+####- Combine factor levels 
+(with less than 5% values for both Train and Test)
+To avoid having fringe level we bin them together into one category: "Other". 
+```{r}
+#TRAIN 
+for(i in names(data_categorical)){
+  p <- 5/100
+  ld <- names(which(prop.table(table(data_categorical[[i]])) < p))
+  levels(data_categorical[[i]])[levels(data_categorical[[i]]) %in% ld] <- "Other"
+}
+
+#TEST
+for(i in names(data.kaggle_categorical)){
+  p <- 5/100
+  ld <- names(which(prop.table(table(data.kaggle_categorical[[i]])) < p))
+  levels(data.kaggle_categorical[[i]])[levels(data.kaggle_categorical[[i]]) %in% ld] <- "Other"
+}
+```
+
+####- Check columns with unequal levels 
+Unequal levels would become an issue as soon as we start creating dummies. To prevent this we check if we have the same amount of levels everywhere. This is not the case and is later adressed.
+```{r}
+summarizeColumns(data_categorical)[,"nlevs"]
+summarizeColumns(data.kaggle_categorical)[,"nlevs"]
+```
+
+####- Exclude columns with only one value
+These columns have no predictive value and are therefore excluded. 
+```{r}
+data_categorical <- subset(data_categorical,select =  names(data_categorical)[c(summarizeColumns(data_categorical)[,"nlevs"] > 1)])
+data.kaggle_categorical <- subset(data.kaggle_categorical,select =  names(data.kaggle_categorical)[c(summarizeColumns(data.kaggle_categorical)[,"nlevs"] > 1)])
+```
+
+####- Deal with different levels per column 
+(later important for creating dummies)
+This is the case where we have not the same amount of columns. Therefore we adjust the levels. 
+```{r}
+# levels(data_categorical$MIGSAME)
+# data.kaggle_categorical$MIGSAME <- factor(data.kaggle_categorical$MIGSAME, levels = c("?","No","Not in universe","Other"))
+
+colnames <- names(data_categorical)[1:31]
+data_categorical <- dummy_cols(data_categorical, select_columns = colnames, remove_selected_columns = T)
+data.kaggle_categorical <- dummy_cols(data.kaggle_categorical, select_columns = colnames, remove_selected_columns = T)
+
+data.kaggle_categorical$`MIGSAME_?` <- NULL
+
+```
+
+###2.3 Treat Numerical variables
+
+####- Check missing values in numerical data
+```{r}
+sum(is.na(data_numerical)) #no missing values
+sum(is.na(data.kaggle_numerical))
+```
+
+####- Set threshold as 0.7
+```{r}
+ax <-findCorrelation(x = cor(data_numerical), cutoff = 0.7)
+
+data_numerical <- data_numerical[,-ax,with=FALSE] 
+data_numerical[,WKSWORK := NULL]
+data.kaggle_numerical[,WKSWORK := NULL]
+```
+
+####- Bin age variable "0-30", "31-60" & "61 - 90"
+We assume that only the general age has an influence for the prediction. Therefore we combine values to bins and create factors. So, we bin the age variable "0-30", "31-60" & "61 - 90" to 3 categories "young", "adult" & "old" respectively.
+
+```{r}
+#sort into age
+data_numerical$AAGE <- factor(ifelse(data_numerical$AAGE < 30, "young", 
+                        ifelse(data_numerical$AAGE >=30 & data_numerical$AAGE < 60, "adult", "old")))
+
+data.kaggle_numerical$AAGE <- factor(ifelse(data.kaggle_numerical$AAGE < 30, "young", 
+                                     ifelse(data.kaggle_numerical$AAGE >=30 & data.kaggle_numerical$AAGE < 60, "adult", "old")))
+
+```
+
+####- Bin numeric variables with "Zero" and "MoreThanZero"
+We first look at the distributions of numeric variables. We see that there are often very only one or two values which actually have many values (usually zero) so we add all of them together to be either zero or not. So, we bin the imbalanced numeric variables "AHRSPAY", "CAPGAIN", "CAPLOSS" & "DIVVAL"  to "Zero" and "MoreThanZero".
+
+```{r}
+#everywhere most values zero, so just look if zero or not
+# hist(data_numerical$AHRSPAY)
+# hist(data_numerical$WKSWORK)
+# hist(data_numerical$CAPGAIN)
+# hist(data_numerical$CAPLOSS)
+# hist(data_numerical$DIVVAL)
+
+data_numerical$AHRSPAY <- factor(ifelse(data$AHRSPAY == 0, "0", "MoreThanZero"))
+data_numerical$WKSWORK <- factor(ifelse(data$WKSWORK == 52, "FT", "NotFT"))
+data_numerical$CAPGAIN <- factor(ifelse(data$CAPGAIN == 0, "0", "MoreThanZero"))
+data_numerical$CAPLOSS <- factor(ifelse(data$CAPLOSS == 0, "0", "MoreThanZero"))
+data_numerical$DIVVAL <- factor(ifelse(data$DIVVAL == 0, "0", "MoreThanZero"))
+
+data.kaggle_numerical$AHRSPAY <- factor(ifelse(data.kaggle_numerical$AHRSPAY == 0, "0", "MoreThanZero"))
+data.kaggle_numerical$WKSWORK <- factor(ifelse(data.kaggle_numerical$WKSWORK == 52, "FT", "NotFT"))
+data.kaggle_numerical$CAPGAIN <- factor(ifelse(data.kaggle_numerical$CAPGAIN == 0, "0", "MoreThanZero"))
+data.kaggle_numerical$CAPLOSS <- factor(ifelse(data.kaggle_numerical$CAPLOSS == 0, "0", "MoreThanZero"))
+data.kaggle_numerical$DIVVAL <- factor(ifelse(data.kaggle_numerical$DIVVAL == 0, "0", "MoreThanZero"))
+
+
+data_numerical <- dummy_cols(data_numerical, remove_selected_columns = T)
+data.kaggle_numerical <- dummy_cols(data.kaggle_numerical, remove_selected_columns = T)
+```
+
+###2.4 Recombine data 
+After treating them differently, we once again combine both parts. 
+
+```{r}
+data <- cbind(data_numerical,data_categorical)
+data.kaggle <- cbind(data.kaggle_numerical,data.kaggle_categorical)
+
+```
+
+###2.5 Split data to training and test
+We split the data and stratify it by the target variable to make sure we have an even distribution of 0s and 1s in the training and test target. 
+
+```{r}
+#We need to split the data into a training and a testing part.
+split <- initial_split(data, prop = test.split, strata = "income_morethan_50K" ) #use strata to make sure we have same proportion of 1s and 0s 
+train <- training(split)
+test  <- testing(split)
+rm(split)
+```
+
+###2.6 SMOTE train data
+
+The SMOTE function can deal with the unbalanced classification problem. To have a balanced data set, it generate new examples of the minority class using the nearest neighbors and under-sampled the majority class examples. We see that there is about a 1:10 imbalance so we try to overdo it and bias the dataset towards 1s to make sure the model actuall also classifies 1s. 
+
+####- Create task
+```{r}
+train <- makeClassifTask(data = data.frame(train),target = "income_morethan_50K")
+
+```
+
+####- SMOTE
+```{r}
+summary(train$env$data$income_morethan_50K) 
+train <- smote(train,rate = 15) 
+```
+
+###2.7 Last data cleaning 
+Reattached Ids for Kaggle upload later.
+
+```{r}
+data.kaggle$Id <- kaggle.ids
+```
+
+
+***
+##3. Save data 
+
+```{r}
+writexl::write_xlsx(train$env$data, "census-income-training-cleaned.V2.xlsx")
+writexl::write_xlsx(test, "census-income-test-cleaned.V2.xlsx")
+writexl::write_xlsx(data.kaggle, "census-income-test-for-kaggle-cleaned.V2.xlsx")
+
+saveRDS(train$env$data, "census-income-training-cleaned.V2.RData")
+saveRDS(test, "census-income-test-cleaned.V2.RData")
+saveRDS(data.kaggle, "census-income-test-for-kaggle-cleaned.V2.RData")
+```
+
+
+
+***
+#Prediction
+###1. Set up Environment
+Clear the environment and library function
+```{r}
+rm(list = ls()) 
+library(xgboost) 
+library(mlr)
+library(caret)
+```
+
+
+###2. Import Data
+```{r}
+data.train <- readRDS("census-income-training-cleaned.V2.RData")
+data.test <- readRDS("census-income-test-cleaned.V2.RData")
+data.TEST <- readRDS("census-income-test-for-kaggle-cleaned.V2.RData")
+ids <- data.TEST$Id
+data.TEST <- data.TEST[, 1:115]
+```
+
+
+
+###3. Create task
+```{r}
+train.task <- makeClassifTask(data = data.frame(data.train),target = "income_morethan_50K")
+test.task <- makeClassifTask(data = data.frame(data.test),target = "income_morethan_50K")
+```
+
+
+
+###4 XGBoost Tuning with different parameters
+We choose XGBoost to use because it consists of a number of hyper-parameters that can be tuned. It can also run a cross-validation after each iteration.
+
+####4.1 First set of parameter (nround = 150)
+```{r}
+set.seed(2002)
+xgb_learner <- makeLearner("classif.xgboost",predict.type = "response")
+xgb_learner$par.vals <- list(
+  objective = "binary:logistic",
+  eval_metric = "error",
+  nrounds = 150,
+  print.every.n = 50
+)
+```
+
+#####4.1.1 Define hyperparameters for tuning
+```{r}
+xg_ps <- makeParamSet( 
+  makeIntegerParam("max_depth",lower=3,upper=10),
+  makeNumericParam("lambda",lower=0.05,upper=0.5),
+  makeNumericParam("eta", lower = 0.01, upper = 0.5),
+  makeNumericParam("subsample", lower = 0.50, upper = 1),
+  makeNumericParam("min_child_weight",lower=2,upper=10),
+  makeNumericParam("colsample_bytree",lower = 0.50,upper = 0.80)
+)
+```
+
+#####4.1.2 Define search function
+```{r}
+rancontrol <- makeTuneControlRandom(maxit = 5L) #do 5 iterations
+
+#5 fold cross validation
+set_cv <- makeResampleDesc("CV",iters = 5L,stratify = TRUE)
+
+```
+
+#####4.1.3 Tune parameters
+
+```{r}
+xgb_tune <- tuneParams(learner = xgb_learner, task = train.task, resampling = set_cv, 
+                       measures = list(acc,tpr,tnr,fpr,fp,fn), par.set = xg_ps, control = rancontrol)
+
+#set optimal parameters
+xgb_new <- setHyperPars(learner = xgb_learner, par.vals = xgb_tune$x)
+
+```
+
+Tune result:
+Op. pars: max_depth=3, lambda=0.406357467, eta=0.7795106, subsample=0.7795106, min_child_weight=7.807708, colsample_bytree=0.542325
+
+
+#####4.1.4 Train Model and Test Model
+```{r}
+#train model
+xgmodel <- mlr::train(xgb_new, train.task)
+
+
+#test model
+predict.xg <- predict(xgmodel, test.task)
+
+```
+
+
+#####4.1.5 Prediction and F1 Score
+```{r}
+#make prediction
+xg_prediction <- predict.xg$data$response
+
+#make confusion matrix
+xg_confused <- confusionMatrix(as.factor(data.test$income_morethan_50),xg_prediction)
+xg_confused
+
+precision <- xg_confused$byClass['Pos Pred Value']
+recall <- xg_confused$byClass['Sensitivity']
+
+f_measure <- 2*((precision*recall)/(precision+recall))
+
+f_measure
+
+```
+The f1 score is 0.9562568 now.
+
+#####4.1.6 Output
+```{r}
+names(data.TEST)[names(data.TEST) == "MIGSAME_NA"] = "MIGSAME_."
+
+names(data.TEST) <- xgmodel$features
+
+prediction <- predict(xgmodel, newdata = data.TEST)
+output = data.frame(Id = ids, income_morethan_50K = prediction)
+names(output) <- c("Id", "income_morethan_50K")
+write.csv(output, "predictions_1.csv", row.names = FALSE, quote = F)
+
+setdiff(xgmodel$features,names(data.TEST)  )
+
+```
+
+
+***
+We try to tune different parameter to get different results.
+
+####4.2 Second set of parameter (nrounds = 400)
+In this set of parameter, we tuned the nrounds to 400. So, the cross-validation process is then repeated 400 times.
+
+```{r}
+rm(xgb_learner, xg_ps, rancontrol, set_cv, xgb_tune, xgb_new, xgmodel, predict.xg, xg_prediction, xg_confused, precision, recall, f_measure )
+
+xgb_learner <- makeLearner("classif.xgboost",predict.type = "response")
+xgb_learner$par.vals <- list(
+  objective = "binary:logistic",
+  eval_metric = "error",
+  print.every.n = 50,
+  nrounds = 400
+)
+```
+
+
+#####4.2.1 Define hyperparameters for tuning
+We also tried to narrow down the lower and upper of hyperparameters.
+
+```{r}
+xg_ps <- makeParamSet( 
+  makeIntegerParam("max_depth",lower=2,upper = 4),
+  makeNumericParam("lambda",lower=0.975 ,upper=0.985),
+  makeNumericParam("eta", lower = 0.04, upper = 0.48),
+  makeNumericParam("subsample", lower = 0.55, upper = 0.58),
+  makeNumericParam("min_child_weight",lower=2.85,upper=2.95),
+  makeNumericParam("colsample_bytree",lower = 0.5,upper = 0.6)
+)
+
+```
+
+#####4.2.2 Define search function
+```{r}
+rancontrol <- makeTuneControlRandom(maxit = 5L) #do 5 iterations
+
+#5 fold cross validation
+set_cv <- makeResampleDesc("CV",iters = 5L,stratify = TRUE)
+
+```
+
+#####4.2.3 Tune parameters
+```{r}
+xgb_tune <- tuneParams(learner = xgb_learner, task = train.task, resampling = set_cv, 
+                       measures = list(acc,tpr,tnr,fpr,fp,fn), par.set = xg_ps, control = rancontrol)
+
+#set optimal parameters
+xgb_new <- setHyperPars(learner = xgb_learner, par.vals = xgb_tune$x)
+
+```
+
+
+#####4.2.4 Train Model and Test Model
+```{r}
+#train model
+xgmodel <- train(xgb_new, train.task)
+
+
+#test model
+predict.xg <- predict(xgmodel, test.task)
+
+```
+
+
+#####4.2.5 Prediction and F1 Score
+```{r}
+#make prediction
+xg_prediction <- predict.xg$data$response
+
+#make confusion matrix
+xg_confused <- confusionMatrix(as.factor(data.test$income_morethan_50),xg_prediction)
+xg_confused
+
+precision <- xg_confused$byClass['Pos Pred Value']
+recall <- xg_confused$byClass['Sensitivity']
+
+f_measure <- 2*((precision*recall)/(precision+recall))
+
+f_measure
+
+```
+
+
+#####4.2.6 Output
+```{r}
+names(data.TEST)[names(data.TEST) == "MIGSAME_NA"] = "MIGSAME_."
+
+names(data.TEST) <- xgmodel$features
+
+prediction <- predict(xgmodel, newdata = data.TEST)
+output = data.frame(Id = ids, income_morethan_50K = prediction)
+names(output) <- c("Id", "income_morethan_50K")
+write.csv(output, "predictions_2.csv", row.names = FALSE, quote = F)
+
+setdiff(xgmodel$features,names(data.TEST)  )
+
+```
+
+####4.3 Third set of parameter (nround = 200)
+In this set of parameter, we keep the same hyperparameters with First set but tuning the nrounds to 200. So, the cross-validation process is then repeated 200 times.
+
+```{r}
+set.seed(2002)
+xgb_learner <- makeLearner("classif.xgboost",predict.type = "response")
+xgb_learner$par.vals <- list(
+  objective = "binary:logistic",
+  eval_metric = "error",
+  nrounds = 200,
+  print.every.n = 50
+)
+```
+
+#####4.3.1 Define hyperparameters for tuning
+```{r}
+xg_ps <- makeParamSet( 
+  makeIntegerParam("max_depth",lower=3,upper=10),
+  makeNumericParam("lambda",lower=0.05,upper=0.5),
+  makeNumericParam("eta", lower = 0.01, upper = 0.5),
+  makeNumericParam("subsample", lower = 0.50, upper = 1),
+  makeNumericParam("min_child_weight",lower=2,upper=10),
+  makeNumericParam("colsample_bytree",lower = 0.50,upper = 0.80)
+)
+```
+
+#####4.3.2 Define search function
+```{r}
+rancontrol <- makeTuneControlRandom(maxit = 5L) #do 5 iterations
+
+#5 fold cross validation
+set_cv <- makeResampleDesc("CV",iters = 5L,stratify = TRUE)
+
+```
+
+
+#####4.3.3 Tune parameters
+```{r}
+xgb_tune <- tuneParams(learner = xgb_learner, task = train.task, resampling = set_cv, 
+                       measures = list(acc,tpr,tnr,fpr,fp,fn), par.set = xg_ps, control = rancontrol)
+
+#set optimal parameters
+xgb_new <- setHyperPars(learner = xgb_learner, par.vals = xgb_tune$x)
+
+```
+
+Tune result:
+Op. pars: max_depth = 10, lambd a= 0.06220324, eta = 0.3075176, 
+subsample = 0.7040407, min_child_weight = 9.077661, colsample_bytree = 0.6410034
+
+#####4.3.3 Train Model and Test Model
+```{r}
+#train model
+xgmodel <- mlr::train(xgb_new, train.task)
+
+
+#test model
+predict.xg <- predict(xgmodel, test.task)
+
+```
+
+
+#####4.3.4 Prediction and F1 Score
+```{r}
+#make prediction
+xg_prediction <- predict.xg$data$response
+
+#make confusion matrix
+xg_confused <- confusionMatrix(as.factor(data.test$income_morethan_50),xg_prediction)
+xg_confused
+
+precision <- xg_confused$byClass['Pos Pred Value']
+recall <- xg_confused$byClass['Sensitivity']
+
+f_measure <- 2*((precision*recall)/(precision+recall))
+
+f_measure
+
+```
+The f1 score is 0.9550929 which is low than the first one.
+
+#####4.3.5 Output
+```{r}
+names(data.TEST)[names(data.TEST) == "MIGSAME_NA"] = "MIGSAME_."
+
+names(data.TEST) <- xgmodel$features
+
+prediction <- predict(xgmodel, newdata = data.TEST)
+output = data.frame(Id = ids, income_morethan_50K = prediction)
+names(output) <- c("Id", "income_morethan_50K")
+write.csv(output, "predictions_3.csv", row.names = FALSE, quote = F)
+
+setdiff(xgmodel$features,names(data.TEST)  )
+
+```
+
+###5 Naive Bayes Model
+We also tried different model to see the differences of predictions.
+Naive Bayes is easy and fast to predict and it performs well in multi-class prediction. 
+
+```{r}
+naive_learner <- makeLearner("classif.naiveBayes",predict.type = "response")
+naive_learner$par.vals <- list(laplace = 1)
+```
+
+#####5.1 Train Model and Predict Model
+```{r}
+nB_model <- train(naive_learner, train.smote)
+nB_predict <- predict(nB_model,test.task)
+
+```
+
+#####5.2 Evaluate
+```{r}
+nB_prediction <- nB_predict$data$response
+model_nB = data.frame(d_test$income_morethan_50K_1)
+dCM <- confusionMatrix(as.factor(d_test$income_morethan_50K_1), nB_prediction)
+```
+
+
+#####5.3 F1 measure
+```{r}
+precision <- dCM$byClass['Pos Pred Value']
+recall <- dCM$byClass['Sensitivity']
+
+f_measure <- 2*((precision*recall)/(precision+recall))
+f_measure 
+
+```
+
+####5.4 Output
+```{r}
+names(data.TEST)[names(data.TEST) == "MIGSAME_NA"] = "MIGSAME_."
+
+names(data.TEST) <- nB_model$features
+
+prediction <- predict(nB_model, newdata = data.TEST)
+output = data.frame(Id = ids, income_morethan_50K = prediction)
+names(output) <- c("Id", "income_morethan_50K")
+write.csv(output, "predictions_nB.csv", row.names = FALSE, quote = F)
+
+setdiff(nB_model$features,names(data.TEST)  )
+
+```
